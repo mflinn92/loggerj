@@ -7,8 +7,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func NewHTTPServer(addr string) *http.Server {
-	logSrv := newLogServer()
+func NewHTTPServer(addr string, log ReadAppender) *http.Server {
+	logSrv := NewLogServer(log)
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", logSrv.handleProduce).Methods("POST")
@@ -21,12 +21,12 @@ func NewHTTPServer(addr string) *http.Server {
 }
 
 type logServer struct {
-	Log *Log
+	Log ReadAppender
 }
 
-func newLogServer() *logServer {
+func NewLogServer(log ReadAppender) *logServer {
 	return &logServer{
-		Log: NewLog(),
+		Log: log,
 	}
 }
 

@@ -7,6 +7,6 @@ import (
 )
 
 func main() {
-	server := server.NewHTTPServer(":8000")
+	server := server.NewHTTPServer(":8000", server.NewLog())
 	log.Fatal(server.ListenAndServe())
 }
