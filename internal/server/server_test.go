@@ -12,23 +12,14 @@ import (
 func TestPostRecord(t *testing.T) {
 	t.Run("it calls append with arbitrary json body and responds 200", func(t *testing.T) {
 		log := &logSpy{}
-		server := server.NewHTTPServer(":8000", log)
-		body := strings.NewReader("{}")
-		req, _ := http.NewRequest(http.MethodPost, "/", body)
-		res := httptest.NewRecorder()
-		server.Handler.ServeHTTP(res, req)
+		res := newPostRequest(log, "{}")
 		assertAppendCalled(t, log)
 		assertStatusCode(t, res, http.StatusOK)
 	})
 
 	t.Run("it calls read with arbitrary json body and responds 200", func(t *testing.T) {
 		log := &logSpy{}
-		server := server.NewHTTPServer(":8000", log)
-		body := strings.NewReader("{}")
-		req, _ := http.NewRequest(http.MethodGet, "/", body)
-		res := httptest.NewRecorder()
-
-		server.Handler.ServeHTTP(res, req)
+		res := newGetRequest(log, "{}")
 		assertReadCalled(t, log)
 		assertStatusCode(t, res, http.StatusOK)
 	})
@@ -68,4 +59,22 @@ func assertStatusCode(t testing.TB, res *httptest.ResponseRecorder, want int) {
 	if res.Code != want {
 		t.Errorf("got status code %d wanted %d", res.Code, want)
 	}
+}
+
+func newPostRequest(log *logSpy, body string) *httptest.ResponseRecorder {
+	server := server.NewHTTPServer(":8000", log)
+	reqBody := strings.NewReader(body)
+	req, _ := http.NewRequest(http.MethodPost, "/", reqBody)
+	res := httptest.NewRecorder()
+	server.Handler.ServeHTTP(res, req)
+	return res
+}
+
+func newGetRequest(log *logSpy, body string) *httptest.ResponseRecorder {
+	server := server.NewHTTPServer(":8000", log)
+	reqBody := strings.NewReader(body)
+	req, _ := http.NewRequest(http.MethodGet, "/", reqBody)
+	res := httptest.NewRecorder()
+	server.Handler.ServeHTTP(res, req)
+	return res
 }
