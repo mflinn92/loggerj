@@ -7,8 +7,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func NewHTTPServer(addr string) *http.Server {
-	logSrv := NewLogServer(NewLog())
+func NewHTTPServer(addr string, log ReadAppender) *http.Server {
+	logSrv := NewLogServer(log)
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", logSrv.handleProduce).Methods("POST")
