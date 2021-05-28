@@ -8,7 +8,7 @@ import (
 )
 
 func NewHTTPServer(addr string) *http.Server {
-	logSrv := newLogServer()
+	logSrv := NewLogServer(NewLog())
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", logSrv.handleProduce).Methods("POST")
@@ -24,9 +24,9 @@ type logServer struct {
 	Log ReadAppender
 }
 
-func newLogServer() *logServer {
+func NewLogServer(log ReadAppender) *logServer {
 	return &logServer{
-		Log: NewLog(),
+		Log: log,
 	}
 }
 
