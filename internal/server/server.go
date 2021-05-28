@@ -21,7 +21,7 @@ func NewHTTPServer(addr string) *http.Server {
 }
 
 type logServer struct {
-	Log *Log
+	Log ReadAppender
 }
 
 func newLogServer() *logServer {

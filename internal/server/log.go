@@ -5,6 +5,11 @@ import (
 	"sync"
 )
 
+type ReadAppender interface {
+	Append(record Record) (uint64, error)
+	Read(offset uint64) (Record, error)
+}
+
 type Log struct {
 	mu      sync.Mutex
 	records []Record
