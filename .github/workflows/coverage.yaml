@@ -23,7 +23,7 @@ jobs:
           go get -v -t -d ./...
       - name: generate coverage report
         run: |
-          go test `go list ./... | grep -v examples` -coverprofile=coverage.txt -covermode=atomic
+          go test ./... -coverprofile=coverage.txt -covermode=atomic
       - name: upload to codecov
         uses: codecov/codecov-action@v1
         with:
