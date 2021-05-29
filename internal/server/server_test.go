@@ -13,6 +13,7 @@ func TestPostRecord(t *testing.T) {
 	t.Run("post calls append with arbitrary json body and responds 200", func(t *testing.T) {
 		log := &logSpy{}
 		res := newServerRequest(log, http.MethodPost, "{}")
+
 		assertAppendCalled(t, log)
 		assertStatusCode(t, res, http.StatusOK)
 	})
@@ -20,6 +21,7 @@ func TestPostRecord(t *testing.T) {
 	t.Run("get calls read with arbitrary json body and responds 200", func(t *testing.T) {
 		log := &logSpy{}
 		res := newServerRequest(log, http.MethodGet, "{}")
+
 		assertReadCalled(t, log)
 		assertStatusCode(t, res, http.StatusOK)
 	})
