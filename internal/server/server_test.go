@@ -46,18 +46,44 @@ func TestGetRecord(t *testing.T) {
 	})
 }
 
+func TestPostGetRecordIntegration(t *testing.T) {
+	log := &logSpy{}
+	var postResponse *httptest.ResponseRecorder
+
+	t.Run("post a record", func(t *testing.T) {
+		// value should be a valid b64 encoding
+		postResponse = newServerRequest(log, http.MethodPost, `{"record":{"value":"AS232fwf"}}`)
+
+		assertStatusCode(t, postResponse, http.StatusOK)
+		assertResponseBody(t, postResponse, `{"offset":0}`)
+	})
+
+	t.Run("get previously posted record", func(t *testing.T) {
+		res := newServerRequest(log, http.MethodGet, postResponse.Body.String())
+		wantRes := `{"record":{"value":"AS232fwf","offset":0}}`
+
+		assertStatusCode(t, res, http.StatusOK)
+		assertResponseBody(t, res, wantRes)
+	})
+}
+
 type logSpy struct {
 	appendCalled bool
 	readCalled   bool
+	records      []server.Record
 }
 
 func (s *logSpy) Read(offset uint64) (server.Record, error) {
 	s.readCalled = true
-	return server.Record{}, nil
+	if offset >= uint64(len(s.records)) {
+		return server.Record{}, nil
+	}
+	return s.records[offset], nil
 }
 
 func (s *logSpy) Append(record server.Record) (uint64, error) {
 	s.appendCalled = true
+	s.records = append(s.records, record)
 	return 0, nil
 }
 
@@ -93,6 +119,14 @@ func assertStatusCode(t testing.TB, res *httptest.ResponseRecorder, want int) {
 	t.Helper()
 	if res.Code != want {
 		t.Errorf("got status code %d wanted %d", res.Code, want)
+	}
+}
+
+func assertResponseBody(t testing.TB, res *httptest.ResponseRecorder, want string) {
+	t.Helper()
+	body := strings.TrimSuffix(res.Body.String(), "\n")
+	if body != want {
+		t.Errorf("got response body %q, want %q", body, want)
 	}
 }
 
