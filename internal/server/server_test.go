@@ -75,35 +75,6 @@ func TestPostGetRecordIntegration(t *testing.T) {
 		assertStatusCode(t, res, http.StatusOK)
 		assertResponseBody(t, res, wantRes)
 	})
-
-	t.Run("get returns 400 with invalid json", func(t *testing.T) {
-		log := &logSpy{}
-		res := newServerRequest(log, http.MethodGet, `{"invalid_json": "bah`)
-
-		assertStatusCode(t, res, http.StatusBadRequest)
-		assertReadNotCalled(t, log)
-	})
-}
-
-func TestPostGetRecordIntegration(t *testing.T) {
-	log := &logSpy{}
-	var postResponse *httptest.ResponseRecorder
-
-	t.Run("post a record", func(t *testing.T) {
-		// value should be a valid b64 encoding
-		postResponse = newServerRequest(log, http.MethodPost, `{"record":{"value":"AS232fwf"}}`)
-
-		assertStatusCode(t, postResponse, http.StatusOK)
-		assertResponseBody(t, postResponse, `{"offset":0}`)
-	})
-
-	t.Run("get previously posted record", func(t *testing.T) {
-		res := newServerRequest(log, http.MethodGet, postResponse.Body.String())
-		wantRes := `{"record":{"value":"AS232fwf","offset":0}}`
-
-		assertStatusCode(t, res, http.StatusOK)
-		assertResponseBody(t, res, wantRes)
-	})
 }
 
 type logSpy struct {
