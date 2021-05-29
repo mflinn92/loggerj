@@ -10,9 +10,10 @@ import (
 )
 
 func TestPostRecord(t *testing.T) {
-	t.Run("post calls append with arbitrary json body and responds 200", func(t *testing.T) {
+	t.Run("it posts a valid record", func(t *testing.T) {
 		log := &logSpy{}
-		res := newServerRequest(log, http.MethodPost, "{}")
+		// value is hello b64 encoded
+		res := newServerRequest(log, http.MethodPost, `{"record":{"value":"aGVsbG8=","offset":0}}`)
 
 		assertAppendCalled(t, log)
 		assertStatusCode(t, res, http.StatusOK)
@@ -29,20 +30,29 @@ func TestPostRecord(t *testing.T) {
 }
 
 func TestGetRecord(t *testing.T) {
-	t.Run("get calls read with arbitrary json body and responds 200", func(t *testing.T) {
-		log := &logSpy{}
-		res := newServerRequest(log, http.MethodGet, "{}")
+	t.Run("it retrieves a valid record", func(t *testing.T) {
+		log := newLogWithRecord(server.Record{Value: []byte("hello"), Offset: 0})
+		res := newServerRequest(log, http.MethodGet, `{"offset":0}`)
 
-		assertReadCalled(t, log)
 		assertStatusCode(t, res, http.StatusOK)
+		// record value is b64 encoded
+		wantRes := `{"record":{"value":"aGVsbG8=","offset":0}}`
+		assertResponseBody(t, res, wantRes)
 	})
-
 	t.Run("get returns 400 with invalid json", func(t *testing.T) {
 		log := &logSpy{}
 		res := newServerRequest(log, http.MethodGet, `{"invalid_json": "bah`)
 
 		assertStatusCode(t, res, http.StatusBadRequest)
 		assertReadNotCalled(t, log)
+	})
+
+	t.Run("it returns 404 not found for invalid offset", func(t *testing.T) {
+		log := &logSpy{}
+		res := newServerRequest(log, http.MethodGet, `{"offset": 3}`)
+
+		assertStatusCode(t, res, http.StatusNotFound)
+		assertReadCalled(t, log)
 	})
 }
 
@@ -76,7 +86,7 @@ type logSpy struct {
 func (s *logSpy) Read(offset uint64) (server.Record, error) {
 	s.readCalled = true
 	if offset >= uint64(len(s.records)) {
-		return server.Record{}, nil
+		return server.Record{}, server.ErrOffsetNotFound
 	}
 	return s.records[offset], nil
 }
@@ -138,4 +148,10 @@ func newServerRequest(log *logSpy, method, body string) *httptest.ResponseRecord
 
 	server.Handler.ServeHTTP(res, req)
 	return res
+}
+
+func newLogWithRecord(r server.Record) *logSpy {
+	return &logSpy{
+		records: []server.Record{r},
+	}
 }
