@@ -17,7 +17,9 @@ func TestPostRecord(t *testing.T) {
 		assertAppendCalled(t, log)
 		assertStatusCode(t, res, http.StatusOK)
 	})
+}
 
+func TestGetRecord(t *testing.T) {
 	t.Run("get calls read with arbitrary json body and responds 200", func(t *testing.T) {
 		log := &logSpy{}
 		res := newServerRequest(log, http.MethodGet, "{}")
