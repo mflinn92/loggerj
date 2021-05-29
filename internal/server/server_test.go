@@ -17,6 +17,15 @@ func TestPostRecord(t *testing.T) {
 		assertAppendCalled(t, log)
 		assertStatusCode(t, res, http.StatusOK)
 	})
+
+	t.Run("post returns 400 with invalid json", func(t *testing.T) {
+		log := &logSpy{}
+		res := newServerRequest(log, http.MethodPost, `{"invalid_json": "blah"`)
+
+		assertAppendNotCalled(t, log)
+		assertStatusCode(t, res, http.StatusBadRequest)
+
+	})
 }
 
 func TestGetRecord(t *testing.T) {
@@ -26,6 +35,14 @@ func TestGetRecord(t *testing.T) {
 
 		assertReadCalled(t, log)
 		assertStatusCode(t, res, http.StatusOK)
+	})
+
+	t.Run("get returns 400 with invalid json", func(t *testing.T) {
+		log := &logSpy{}
+		res := newServerRequest(log, http.MethodGet, `{"invalid_json": "bah`)
+
+		assertStatusCode(t, res, http.StatusBadRequest)
+		assertReadNotCalled(t, log)
 	})
 }
 
@@ -51,10 +68,24 @@ func assertAppendCalled(t testing.TB, log *logSpy) {
 	}
 }
 
+func assertAppendNotCalled(t testing.TB, log *logSpy) {
+	t.Helper()
+	if log.appendCalled {
+		t.Errorf("append should not be called with invalid request body")
+	}
+}
+
 func assertReadCalled(t testing.TB, log *logSpy) {
 	t.Helper()
 	if !log.readCalled {
 		t.Errorf("expected a read from the log")
+	}
+}
+
+func assertReadNotCalled(t testing.TB, log *logSpy) {
+	t.Helper()
+	if log.readCalled {
+		t.Errorf("read should not have been called with invalid request body")
 	}
 }
 
